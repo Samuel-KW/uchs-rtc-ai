@@ -19,10 +19,10 @@ class CNN:
         self.train_x = train_x
         self.train_y = train_y
 
-        # Basic image parameters
+        # Basic image parameters (aspect ratio is 4:3)
         self.image = {
-            "width": 6,
-            "height": 9,
+            "width": 160,
+            "height": 120,
             "depth": 1
         }
 
@@ -54,13 +54,22 @@ class CNN:
             Dense(2)
         ])
 
+        # Compile the model with CCE as the loss function and adam as the optimizer 
         self.model.compile(
             loss="categorical_crossentropy",
             optimizer="adam",
             metrics=["accuracy"])
+        
+        # Print summary of the model
+        self.model.summary() 
 
     def train(self):
-        self.model.fit(self.train_x, self.train_y, self.batch_size, self.epochs)
+        return self.model.fit(self.train_x, self.train_y,
+            validation_data=(validation_input, validation_target),
+            batch_size=self.batch_size,
+            epochs=self.epochs,
+            shuffle=True,
+            verbose=1)
 
     def evaluate(self, test_x, test_y, slack_delta=0.1):
         predictions = self.model.predict(test_x)
@@ -75,61 +84,41 @@ class CNN:
     def save_model(self, filename):
         self.model.save(filename)
 
+if __name__ == '__main__':
+    
+    # Amount of data to train on
+    testing_percent = 0.7
 
-# Amount of data to train on
-testing_percent = 0.7
+    # Get the number of images to use
+    training_amount = int(len(data) * testing_percent)
 
+    # Load in the training and testing data
+    train_input, validation_target = data[:training_amount], data[training_amount:]
+    train_target, validation_input = data[:training_amount], data[training_amount:]
 
+    # Normalizing data - turn values 0-255 into 0-1
+    train_input = train_input / 255.0
+    validation_target = validation_target / 255.0
 
-data_dir = pathlib.Path(dataset_path)
+    print(len(x_train))
 
-data = []
-
-# Get the number of images to use
-training_amount = int(len(data) * testing_percent)
-
-# Load in the training and testing data
-train_input, validation_target = data[:training_amount], data[training_amount:]
-train_target, validation_input = data[:training_amount], data[training_amount:]
-
-# Normalizing data - turn values 0-255 into 0-1
-train_input = train_input / 255.0
-validation_target = validation_target / 255.0
-
-# Turn array of integers into a binary class matrix
-y_train_one_hot = to_categorical(train_target)
-y_test_one_hot = to_categorical(validation_input)
-
-# Create a new model for the dataset with optimised layers - in this case, not so much
-model = Sequential([
-    Conv2D(32, 3, activation="relu", input_shape=(110, 110, 1)),
-    MaxPooling2D((2, 2)),
-    Conv2D(64, 3, activation="relu"),
-    MaxPooling2D((2, 2)),
-    Conv2D(64, 3, activation="relu"),
-    MaxPooling2D((2, 2)),
-
-    Flatten(),
-    Dense(1024, activation="relu"),
-    Dropout(0.5),
-
-    Dense(8, activation="softmax")
-])
-
-# Categorial crossentropy can also be used
-# "categorical_crossentropy"
-
-# Use MSE as the loss function
-model.compile(loss=tf.keras.losses.MeanSquaredError(), 
-              optimizer="adam",
-              metrics=["accuracy"])
-
-trained_model = model.fit(train_input, train_target,
-                    validation_data=(validation_input, validation_target),
-                    batch_size=16,
-                    epochs=40,
-                    shuffle=True,
-                    verbose=1)
-
-
-print(len(x_train))
+    
+    model_filename = 'location_data.h5'
+    
+    data_set = DataSet()
+    
+    print("train x shape: ", data_set.train_x.shape)
+    print("train y shape: ", data_set.train_y.shape)
+    
+    cnn = CNN(np.append(data_set.train_x, data_set.test_x, axis=0),
+              np.append(data_set.train_y, data_set.test_y, axis=0))
+    
+    cnn.train()
+    
+    print("Saving model to " + model_filename)
+    
+    cnn.save_model(model_filename)
+    accuracy = cnn.evaluate(data_set.test_x, data_set.test_y)
+    
+    print('Accuracy of the model: ' + str(accuracy[0]))
+    print('Accuracy per axis(x, y): ' + str(accuracy[1]))
