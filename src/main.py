@@ -7,7 +7,7 @@ from keras.layers import Dense
 from keras.layers import Flatten
 from keras.models import Sequential
 
-import pickle, os
+import pickle, gzip, os
 import matplotlib.pyplot as plt
 
 class CNN:
@@ -84,28 +84,21 @@ class CNN:
     def save_model(self, filename):
         self.model.save(filename)
 
+class DataSet:
+    def __init__(self, location):
+        
+        with gzip.open(location, 'rb') as f:
+            data_set_dict = pickle.load(f)
+            
+        self.train_x, self.train_y = data_set_dict['train']['data'], data_set_dict['train']['label']
+        self.test_x, self.test_y = data_set_dict['test']['data'], data_set_dict['test']['label']
+        
 if __name__ == '__main__':
     
-    # Amount of data to train on
-    testing_percent = 0.7
-
-    # Get the number of images to use
-    training_amount = int(len(data) * testing_percent)
-
-    # Load in the training and testing data
-    train_input, validation_target = data[:training_amount], data[training_amount:]
-    train_target, validation_input = data[:training_amount], data[training_amount:]
-
-    # Normalizing data - turn values 0-255 into 0-1
-    train_input = train_input / 255.0
-    validation_target = validation_target / 255.0
-
-    print(len(x_train))
-
-    
     model_filename = 'location_data.h5'
+    images_filename = 'location_images.gz'
     
-    data_set = DataSet()
+    data_set = DataSet(images_filename)
     
     print("train x shape: ", data_set.train_x.shape)
     print("train y shape: ", data_set.train_y.shape)
