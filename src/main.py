@@ -58,6 +58,8 @@ class CNN:
             Conv2D(16, 3),
             Activation("relu"),
 
+            Dropout(rate=0.2),
+
             Conv2D(8, 3),
             Activation("relu"),
 
@@ -83,6 +85,7 @@ class CNN:
             validation_data=(test_x, test_y),
             batch_size=self.batch_size,
             epochs=self.epochs,
+            verbose=1,
             shuffle=True)
 
     def evaluate(self, test_x, test_y, slack_delta=0.1):
@@ -90,6 +93,10 @@ class CNN:
         number_of_labels = float(predictions.shape[0])
 
         print("predictions", predictions)
+
+        plt.scatter(*zip(*predictions))
+        plt.scatter(*zip(*test_y))
+        plt.show()
 
         correct_predictions = np.less_equal(np.fabs(test_y - predictions), slack_delta)
         accuracy_per_axis = np.sum(correct_predictions, axis=0) / number_of_labels
@@ -130,9 +137,10 @@ if __name__ == '__main__':
     print('Accuracy per axis(x, y): ' + str(accuracy[1]))
 
     
+
     plt.figure(1)
-    plt.plot(trained_model.history['acc'])
-    plt.plot(trained_model.history['val_acc'])
+    plt.plot(trained_model.history['accuracy'])
+    plt.plot(trained_model.history['val_accuracy'])
     plt.title('model accuracy')
     plt.ylabel('accuracy')
     plt.xlabel('epoch')

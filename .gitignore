@@ -1,8 +1,4 @@
 images/
-tests/
-
-*.gz
-*.h5
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
