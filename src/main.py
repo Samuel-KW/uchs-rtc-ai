@@ -58,7 +58,7 @@ class CNN:
             Conv2D(16, 3),
             Activation("relu"),
 
-            Dropout(rate=0.2),
+            #Dropout(rate=0.2),
 
             Conv2D(8, 3),
             Activation("relu"),
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     
     data_set = DataSet(images_filename)
     
-    cnn = CNN(data_set.train_x, data_set.train_y)
+    cnn = CNN(data_set.train_x, data_set.train_y, 1000, 128)
     
     trained_model = cnn.train(data_set.test_x, data_set.test_y)
     
